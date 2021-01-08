@@ -40,12 +40,14 @@ const isEvent = key => key.startsWith("on")
 //checks if it is an property
 const isProperty = key =>
   key !== "children" && !isEvent(key)
-
+//compare the props from the old fiber to the props of the new fiber
 const isNew = (prev, next) => key =>
   prev[key] !== next[key]
-
+//checks if it is props gone or not
 const isGone = (prev, next) => key => !(key in next)
 
+//We compare the props from the old fiber to the props of the new fiber,
+// remove the props that are gone, and set the props that are new or changed.
 function updateDom(dom, prevProps, nextProps) {
   //Remove old or changed event listeners
   Object.keys(prevProps)
@@ -96,6 +98,10 @@ function updateDom(dom, prevProps, nextProps) {
     })
 }
 
+
+//we commit the whole fiber tree to the DOM. We do it in the commitRoot function.
+// Here we recursively append all the nodes to the dom.
+//просто исполняет commit work 
 function commitRoot() {
 deletions.forEach(commitWork)
   commitWork(wipRoot.child)
@@ -103,6 +109,8 @@ deletions.forEach(commitWork)
   wipRoot = null
 }
 
+
+//===================================================
 function commitWork(fiber) {
   if (!fiber) {
     return
@@ -135,7 +143,7 @@ function commitWork(fiber) {
   commitWork(fiber.child)
   commitWork(fiber.sibling)
 }
-
+//====================================================
 function commitDeletion(fiber, domParent) {
   if (fiber.dom) {
     domParent.removeChild(fiber.dom)
@@ -143,7 +151,9 @@ function commitDeletion(fiber, domParent) {
     commitDeletion(fiber.child, domParent)
   }
 }
+//==========================================================================
 
+//We call it the work in progress root or wipRoot.
 function render(element, container) {
   wipRoot = {
     dom: container,
@@ -157,10 +167,13 @@ function render(element, container) {
 }
 
 let nextUnitOfWork = null
+//не пон
 let currentRoot = null
+//progress rooot
 let wipRoot = null
 let deletions = null
 
+// a function that allows rendering when the browser is idle
 function workLoop(deadline) {
   let shouldYield = false
   while (nextUnitOfWork && !shouldYield) {
@@ -177,8 +190,8 @@ function workLoop(deadline) {
   requestIdleCallback(workLoop)
 }
 
-requestIdleCallback(workLoop)
-
+requestIdleCallback(workLoop) //I did not understand why the second time to use the function
+//The fiber tree algorithm itself
 function performUnitOfWork(fiber) {
   const isFunctionComponent =
     fiber.type instanceof Function
@@ -199,9 +212,12 @@ function performUnitOfWork(fiber) {
   }
 }
 
+//resetting the root element
 let wipFiber = null
 let hookIndex = null
 
+// это надо знать рекат
+//resetting the functional component
 function updateFunctionComponent(fiber) {
   wipFiber = fiber
   hookIndex = 0
